@@ -1,0 +1,537 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.45.15.27210",
+      "templateHash": "3075046839194408075"
+    }
+  },
+  "parameters": {
+    "healthModelName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the health model. This also becomes the root entity name."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.CloudHealth/healthmodels",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[parameters('healthModelName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/authenticationsettings",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'default-auth')]",
+      "properties": {
+        "displayName": "Default Authentication",
+        "authenticationKind": "ManagedIdentity",
+        "managedIdentityName": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'http-response-time')]",
+      "properties": {
+        "signalKind": "AzureResourceMetric",
+        "displayName": "HTTP Response Time",
+        "metricNamespace": "microsoft.web/sites",
+        "metricName": "HttpResponseTime",
+        "aggregationType": "Average",
+        "timeGrain": "PT1M",
+        "dataUnit": "Seconds",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "GreaterThan",
+            "threshold": 2
+          },
+          "unhealthyRule": {
+            "operator": "GreaterThan",
+            "threshold": 5
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'http-5xx')]",
+      "properties": {
+        "signalKind": "AzureResourceMetric",
+        "displayName": "HTTP Server Errors",
+        "metricNamespace": "microsoft.web/sites",
+        "metricName": "Http5xx",
+        "aggregationType": "Total",
+        "timeGrain": "PT5M",
+        "dataUnit": "Count",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "GreaterThan",
+            "threshold": 5
+          },
+          "unhealthyRule": {
+            "operator": "GreaterThan",
+            "threshold": 25
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'apim-failed-requests')]",
+      "properties": {
+        "signalKind": "AzureResourceMetric",
+        "displayName": "APIM Failed Requests",
+        "metricNamespace": "microsoft.apimanagement/service",
+        "metricName": "FailedRequests",
+        "aggregationType": "Total",
+        "timeGrain": "PT5M",
+        "dataUnit": "Count",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "GreaterThan",
+            "threshold": 10
+          },
+          "unhealthyRule": {
+            "operator": "GreaterThan",
+            "threshold": 50
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'cosmosdb-availability')]",
+      "properties": {
+        "signalKind": "AzureResourceMetric",
+        "displayName": "Cosmos DB Availability",
+        "metricNamespace": "microsoft.documentdb/databaseaccounts",
+        "metricName": "ServiceAvailability",
+        "aggregationType": "Average",
+        "timeGrain": "PT5M",
+        "dataUnit": "Percent",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "LessThan",
+            "threshold": "[json('99.9')]"
+          },
+          "unhealthyRule": {
+            "operator": "LessThan",
+            "threshold": 99
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'redis-cache-hits')]",
+      "properties": {
+        "signalKind": "AzureResourceMetric",
+        "displayName": "Redis Cache Hits",
+        "metricNamespace": "microsoft.cache/redis",
+        "metricName": "cachehits",
+        "aggregationType": "Average",
+        "timeGrain": "PT5M",
+        "dataUnit": "Count",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "LessThan",
+            "threshold": 100
+          },
+          "unhealthyRule": {
+            "operator": "LessThan",
+            "threshold": 10
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'failed-requests-log')]",
+      "properties": {
+        "signalKind": "LogAnalyticsQuery",
+        "displayName": "Failed Requests (Log)",
+        "queryText": "AppRequests | where Success == false | summarize FailedCount=count() by bin(TimeGenerated, 5m) | project FailedCount",
+        "timeGrain": "PT5M",
+        "valueColumnName": "FailedCount",
+        "refreshInterval": "PT5M",
+        "dataUnit": "Count",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "GreaterThan",
+            "threshold": 10
+          },
+          "unhealthyRule": {
+            "operator": "GreaterThan",
+            "threshold": 50
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/signaldefinitions",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'exception-rate-log')]",
+      "properties": {
+        "signalKind": "LogAnalyticsQuery",
+        "displayName": "Exception Rate (Log)",
+        "queryText": "AppExceptions | summarize ExceptionCount=count() by bin(TimeGenerated, 5m) | project ExceptionCount",
+        "timeGrain": "PT5M",
+        "valueColumnName": "ExceptionCount",
+        "refreshInterval": "PT5M",
+        "dataUnit": "Count",
+        "evaluationRules": {
+          "degradedRule": {
+            "operator": "GreaterThan",
+            "threshold": 5
+          },
+          "unhealthyRule": {
+            "operator": "GreaterThan",
+            "threshold": 20
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'frontend')]",
+      "properties": {
+        "displayName": "Frontend",
+        "canvasPosition": {
+          "x": 0,
+          "y": 200
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'backend')]",
+      "properties": {
+        "displayName": "Backend",
+        "canvasPosition": {
+          "x": 450,
+          "y": 200
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'data')]",
+      "properties": {
+        "displayName": "Data",
+        "canvasPosition": {
+          "x": 900,
+          "y": 200
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'web')]",
+      "properties": {
+        "displayName": "Web (attach App Service)",
+        "canvasPosition": {
+          "x": -100,
+          "y": 400
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'api-gateway')]",
+      "properties": {
+        "displayName": "API Gateway (attach APIM)",
+        "canvasPosition": {
+          "x": 100,
+          "y": 400
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'api')]",
+      "properties": {
+        "displayName": "API (attach App Service)",
+        "canvasPosition": {
+          "x": 350,
+          "y": 400
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'worker')]",
+      "properties": {
+        "displayName": "Worker",
+        "canvasPosition": {
+          "x": 550,
+          "y": 400
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'database')]",
+      "properties": {
+        "displayName": "Database (attach Cosmos DB)",
+        "canvasPosition": {
+          "x": 800,
+          "y": 400
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'cache')]",
+      "properties": {
+        "displayName": "Cache (attach Redis)",
+        "canvasPosition": {
+          "x": 1050,
+          "y": 400
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/entities",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), parameters('healthModelName'))]",
+      "properties": {
+        "displayName": "[parameters('healthModelName')]",
+        "canvasPosition": {
+          "x": 400,
+          "y": 0
+        },
+        "alerts": {
+          "unhealthy": {
+            "severity": "Sev1",
+            "description": "The health model root entity is unhealthy. One or more tiers have critical issues."
+          },
+          "degraded": {
+            "severity": "Sev3",
+            "description": "The health model root entity is degraded. One or more tiers are experiencing issues."
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), format('{0}-frontend', parameters('healthModelName')))]",
+      "properties": {
+        "parentEntityName": "[parameters('healthModelName')]",
+        "childEntityName": "frontend"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'frontend')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), format('{0}-backend', parameters('healthModelName')))]",
+      "properties": {
+        "parentEntityName": "[parameters('healthModelName')]",
+        "childEntityName": "backend"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'backend')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), format('{0}-data', parameters('healthModelName')))]",
+      "properties": {
+        "parentEntityName": "[parameters('healthModelName')]",
+        "childEntityName": "data"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'data')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'frontend-web')]",
+      "properties": {
+        "parentEntityName": "frontend",
+        "childEntityName": "web"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'frontend')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'web')]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'frontend-api-gateway')]",
+      "properties": {
+        "parentEntityName": "frontend",
+        "childEntityName": "api-gateway"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'api-gateway')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'frontend')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'backend-api')]",
+      "properties": {
+        "parentEntityName": "backend",
+        "childEntityName": "api"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'api')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'backend')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'backend-worker')]",
+      "properties": {
+        "parentEntityName": "backend",
+        "childEntityName": "worker"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'backend')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'worker')]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'data-database')]",
+      "properties": {
+        "parentEntityName": "data",
+        "childEntityName": "database"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'database')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'data')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.CloudHealth/healthmodels/relationships",
+      "apiVersion": "2026-05-01-preview",
+      "name": "[format('{0}/{1}', parameters('healthModelName'), 'data-cache')]",
+      "properties": {
+        "parentEntityName": "data",
+        "childEntityName": "cache"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'cache')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels/entities', parameters('healthModelName'), 'data')]",
+        "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "healthModelName": {
+      "type": "string",
+      "value": "[parameters('healthModelName')]"
+    },
+    "healthModelId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName'))]"
+    },
+    "location": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.CloudHealth/healthmodels', parameters('healthModelName')), '2026-05-01-preview', 'full').location]"
+    }
+  }
+}
