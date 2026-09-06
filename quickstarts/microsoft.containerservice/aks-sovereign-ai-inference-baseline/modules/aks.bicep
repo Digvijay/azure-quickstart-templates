@@ -49,7 +49,7 @@ param clusterAdminGroupObjectId string
 @description('Log Analytics workspace resource ID.')
 param logAnalyticsWorkspaceId string
 
-resource aks 'Microsoft.ContainerService/managedClusters@2024-09-02-preview' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2025-05-01' = {
   name: clusterName
   location: location
   tags: tags
@@ -180,7 +180,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-09-02-preview' = {
         maxPods: 30
         // Delegate GPU driver lifecycle to the AMD GPU Operator (driver mgmt = None).
         gpuProfile: {
-          installGPUDriver: false
+          driver: 'None'
         }
         nodeLabels: {
           'amd.com/gpu': 'true'

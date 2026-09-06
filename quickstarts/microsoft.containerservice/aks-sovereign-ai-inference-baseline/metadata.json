@@ -1,9 +1,24 @@
 {
   "$schema": "https://aka.ms/azure-quickstart-templates-metadata-schema#",
   "type": "QuickStart",
-  "itemDisplayName": "Air-gapped, event-driven SLM inference on AKS with AMD MI300X, KAITO and KEDA",
+  "itemDisplayName": "Air-gapped SLM inference on AKS with AMD MI300X GPUs",
   "description": "Deploys a sovereign, air-gapped Small Language Model (SLM) inference platform on Azure Kubernetes Service. It provisions a hardened private VNet, Azure Firewall with locked-down egress via user-defined routing, and a private AKS cluster using Azure CNI Overlay with the Cilium dataplane. A system node pool (Standard_D16ds_v5) hosts platform add-ons while an AMD Instinct MI300X GPU user pool (Standard_ND96isr_MI300X_v5) serves models. GPU driver management is set to None so the AMD GPU Operator owns the ROCm driver lifecycle. KAITO (AI toolchain operator) provisions the phi-4 model on a ROCm vLLM runtime and KEDA autoscales replicas on inference queue depth, including scale-to-zero. CKS-grade zero-trust Cilium NetworkPolicies enforce a default-deny perimeter to protect model IP and data.",
   "summary": "Sovereign, air-gapped SLM inference on AKS with AMD MI300X GPUs, KAITO and KEDA, aligned to the Azure Well-Architected Framework.",
   "githubUsername": "Digvijay",
-  "dateUpdated": "2026-09-07"
+  "dateUpdated": "2026-09-07",
+  "validationType": "Manual",
+  "environments": [
+    "AzureCloud"
+  ],
+  "languages": [
+    "bicep",
+    "json"
+  ],
+  "tags": {
+    "cost": "$$$",
+    "os": "Linux",
+    "resource": "AKS",
+    "level": "Advanced",
+    "scenario": "Sovereign AI inference"
+  }
 }

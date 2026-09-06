@@ -11,11 +11,11 @@ param routeTableName string
 @description('Private IP address of the Azure Firewall (next hop).')
 param firewallPrivateIp string
 
-resource routeTable 'Microsoft.Network/routeTables@2023-11-01' existing = {
+resource routeTable 'Microsoft.Network/routeTables@2024-10-01' existing = {
   name: routeTableName
 }
 
-resource defaultRoute 'Microsoft.Network/routeTables/routes@2023-11-01' = {
+resource defaultRoute 'Microsoft.Network/routeTables/routes@2024-10-01' = {
   parent: routeTable
   name: 'default-to-firewall'
   properties: {

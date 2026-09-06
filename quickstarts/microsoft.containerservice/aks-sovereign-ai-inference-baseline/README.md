@@ -1,3 +1,14 @@
+---
+description: Deploys a sovereign, air-gapped Small Language Model (SLM) inference platform on Azure Kubernetes Service. It provisions a hardened private VNet, Azure Firewall with locked-down egress via user-defined routing, and a private AKS cluster using Azure CNI Overlay with the Cilium dataplane. A system node pool (Standard_D16ds_v5) hosts platform add-ons while an AMD Instinct MI300X GPU user pool (Standard_ND96isr_MI300X_v5) serves models. GPU driver management is set to None so the AMD GPU Operator owns the ROCm driver lifecycle. KAITO (AI toolchain operator) provisions the phi-4 model on a ROCm vLLM runtime and KEDA autoscales replicas on inference queue depth, including scale-to-zero. CKS-grade zero-trust Cilium NetworkPolicies enforce a default-deny perimeter to protect model IP and data.
+page_type: sample
+products:
+- azure
+- azure-resource-manager
+urlFragment: aks-sovereign-ai-inference-baseline
+languages:
+- bicep
+- json
+---
 # Sovereign, air-gapped SLM inference on AKS with AMD MI300X, KAITO and KEDA
 
 ![Azure Public Test Date](https://azurequickstartsservice.blob.core.windows.net/badges/quickstarts/microsoft.containerservice/aks-sovereign-ai-inference-baseline/PublicLastTestDate.svg)
@@ -8,6 +19,7 @@
 
 ![Best Practice Check](https://azurequickstartsservice.blob.core.windows.net/badges/quickstarts/microsoft.containerservice/aks-sovereign-ai-inference-baseline/BestPracticeResult.svg)
 ![Cred Scan Check](https://azurequickstartsservice.blob.core.windows.net/badges/quickstarts/microsoft.containerservice/aks-sovereign-ai-inference-baseline/CredScanResult.svg)
+
 ![Bicep Version](https://azurequickstartsservice.blob.core.windows.net/badges/quickstarts/microsoft.containerservice/aks-sovereign-ai-inference-baseline/BicepVersion.svg)
 
 [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fquickstarts%2Fmicrosoft.containerservice%2Faks-sovereign-ai-inference-baseline%2Fazuredeploy.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fquickstarts%2Fmicrosoft.containerservice%2Faks-sovereign-ai-inference-baseline%2FcreateUiDefinition.json)
@@ -61,7 +73,7 @@ flowchart LR
 ## Dataflow
 
 1. An **internal API consumer** running inside the private VNet (labelled `role=inference-consumer`) sends an OpenAI-compatible request to the vLLM service on port `8000`. A Cilium `NetworkPolicy` admits this traffic; no ingress from outside the VNet is possible because the cluster is private and the workload namespace is default-deny.
-2. The **KAITO Workspace** serves the request on a **phi-4** model using the ROCm-optimized **vLLM** runtime, scheduled onto an **AMD Instinct MI300X** node (`accelerator=mi300x`). The **AMD GPU Operator** has already installed the ROCm driver and advertises the `amd.com/gpu` resource, since AKS delegated GPU driver management to the operator (`installGPUDriver=false`).
+2. The **KAITO Workspace** serves the request on a **phi-4** model using the ROCm-optimized **vLLM** runtime, scheduled onto an **AMD Instinct MI300X** node (`accelerator=mi300x`). The **AMD GPU Operator** has already installed the ROCm driver and advertises the `amd.com/gpu` resource, since AKS delegated GPU driver management to the operator (the node pool sets `gpuProfile.driver: None`).
 3. vLLM continuously exports Prometheus metrics — including the queue-depth gauge `vllm:num_requests_waiting` — which **Azure Monitor managed Prometheus** scrapes via a `ServiceMonitor`.
 4. **KEDA** queries that metric from the Azure Monitor workspace (authenticated with Entra **Workload Identity**) and adjusts the replica count of the KAITO-managed deployment: it **bursts** on rising queue depth and **scales back to zero** when idle, so no MI300X GPU is billed while unused. The cluster-autoscaler adds/removes MI300X nodes to match.
 5. Every attempt by a workload pod to reach the **public internet** is **dropped** by the default-deny egress `NetworkPolicy` (only cluster DNS is allowed). At the node level, all outbound traffic is force-tunnelled through **Azure Firewall** via a UDR and permitted only to a small allow-list of AKS-required FQDNs — enforcing the air-gap for model weights and prompt data.
@@ -100,7 +112,7 @@ The [Azure Well-Architected Framework](https://learn.microsoft.com/azure/well-ar
 
 ### Operational Excellence
 
-- **No manual driver toil.** The AMD GPU Operator installs and upgrades the ROCm driver and device plugin; AKS is configured with `installGPUDriver=false` so there is a single, declarative owner of the GPU lifecycle.
+- **No manual driver toil.** The AMD GPU Operator installs and upgrades the ROCm driver and device plugin; the GPU node pool is configured with `gpuProfile.driver: None` so there is a single, declarative owner of the GPU lifecycle.
 - **No manual model/container toil.** KAITO turns model serving into a declarative `Workspace` resource — it provisions the runtime, wires the service, and reconciles drift — removing bespoke Dockerfiles and serving scripts.
 - **Everything as code.** Infrastructure is modular Bicep; cluster state is Kubernetes manifests; deployment and validation are idempotent scripts.
 

@@ -41,7 +41,7 @@ var subnets = {
 
 // ------------------------------ NSGs -----------------------------------------
 
-resource systemNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+resource systemNsg 'Microsoft.Network/networkSecurityGroups@2024-10-01' = {
   name: '${subnets.system.name}-nsg'
   location: location
   tags: tags
@@ -64,7 +64,7 @@ resource systemNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   }
 }
 
-resource gpuNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+resource gpuNsg 'Microsoft.Network/networkSecurityGroups@2024-10-01' = {
   name: '${subnets.gpu.name}-nsg'
   location: location
   tags: tags
@@ -105,19 +105,18 @@ resource gpuNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
 // after the firewall private IP is known. Associated only to workload subnets
 // (never to AzureFirewallSubnet).
 
-resource routeTable 'Microsoft.Network/routeTables@2023-11-01' = {
+resource routeTable 'Microsoft.Network/routeTables@2024-10-01' = {
   name: routeTableName
   location: location
   tags: tags
   properties: {
     disableBgpRoutePropagation: true
-    routes: []
   }
 }
 
 // ------------------------------ VNet + subnets -------------------------------
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-10-01' = {
   name: vnetName
   location: location
   tags: tags

@@ -23,17 +23,17 @@ param vnetId string
 // Built-in role: Network Contributor
 var networkContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4d97b98b-1d4f-4787-a291-c67834d212e7')
 
-resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: identityName
   location: location
   tags: tags
 }
 
-resource routeTable 'Microsoft.Network/routeTables@2023-11-01' existing = {
+resource routeTable 'Microsoft.Network/routeTables@2024-10-01' existing = {
   name: last(split(routeTableId, '/'))
 }
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-10-01' existing = {
   name: last(split(vnetId, '/'))
 }
 

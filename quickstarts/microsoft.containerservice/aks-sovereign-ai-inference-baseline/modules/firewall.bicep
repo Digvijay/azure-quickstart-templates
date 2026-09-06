@@ -26,7 +26,12 @@ param firewallSubnetId string
 @description('Log Analytics workspace resource ID for diagnostics.')
 param logAnalyticsWorkspaceId string
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
+// Derive Azure control-plane hostnames from the cloud environment so the
+// allow-list stays correct across national clouds and avoids hardcoded URIs.
+var resourceManagerHost = replace(replace(environment().resourceManager, 'https://', ''), '/', '')
+var aadLoginHost = replace(replace(environment().authentication.loginEndpoint, 'https://', ''), '/', '')
+
+resource publicIp 'Microsoft.Network/publicIPAddresses@2024-10-01' = {
   name: publicIpName
   location: location
   tags: tags
@@ -39,7 +44,7 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
   }
 }
 
-resource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-11-01' = {
+resource firewallPolicy 'Microsoft.Network/firewallPolicies@2024-10-01' = {
   name: firewallPolicyName
   location: location
   tags: tags
@@ -52,7 +57,7 @@ resource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-11-01' = {
 }
 
 // Minimal AKS egress allow-list. Extend with your private ACR / model mirror.
-resource ruleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2023-11-01' = {
+resource ruleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-10-01' = {
   parent: firewallPolicy
   name: 'aks-egress'
   properties: {
@@ -82,10 +87,8 @@ resource ruleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionG
               '*.hcp.${location}.azmk8s.io'
               'mcr.microsoft.com'
               '*.data.mcr.microsoft.com'
-              #disable-next-line no-hardcoded-env-urls
-              'management.azure.com'
-              #disable-next-line no-hardcoded-env-urls
-              'login.microsoftonline.com'
+              resourceManagerHost
+              aadLoginHost
               'packages.microsoft.com'
               'acs-mirror.azureedge.net'
             ]
@@ -159,7 +162,7 @@ resource ruleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionG
   }
 }
 
-resource firewall 'Microsoft.Network/azureFirewalls@2023-11-01' = {
+resource firewall 'Microsoft.Network/azureFirewalls@2024-10-01' = {
   name: firewallName
   location: location
   tags: tags

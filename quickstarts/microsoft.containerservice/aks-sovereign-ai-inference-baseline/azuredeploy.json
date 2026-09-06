@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "11741749254806531278"
+      "templateHash": "12523667440785414962"
     }
   },
   "parameters": {
@@ -48,6 +48,7 @@
       "type": "int",
       "defaultValue": 0,
       "minValue": 0,
+      "maxValue": 8,
       "metadata": {
         "description": "Baseline number of MI300X GPU nodes. KEDA scales pods; cluster-autoscaler scales nodes between min and max."
       }
@@ -56,6 +57,7 @@
       "type": "int",
       "defaultValue": 4,
       "minValue": 1,
+      "maxValue": 8,
       "metadata": {
         "description": "Maximum MI300X GPU nodes the cluster-autoscaler may provision."
       }
@@ -111,14 +113,14 @@
   "resources": [
     {
       "type": "Microsoft.Monitor/accounts",
-      "apiVersion": "2023-04-03",
+      "apiVersion": "2025-10-03",
       "name": "[variables('names').azureMonitorWorkspace]",
       "location": "[parameters('location')]",
       "tags": "[parameters('tags')]"
     },
     {
       "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "2023-09-01",
+      "apiVersion": "2025-02-01",
       "name": "[variables('names').logAnalytics]",
       "location": "[parameters('location')]",
       "tags": "[parameters('tags')]",
@@ -162,7 +164,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "1598623985742763424"
+              "templateHash": "2945761906997555264"
             }
           },
           "parameters": {
@@ -221,7 +223,7 @@
           "resources": [
             {
               "type": "Microsoft.Network/networkSecurityGroups",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[format('{0}-nsg', variables('subnets').system.name)]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -245,7 +247,7 @@
             },
             {
               "type": "Microsoft.Network/networkSecurityGroups",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[format('{0}-nsg', variables('subnets').gpu.name)]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -282,18 +284,17 @@
             },
             {
               "type": "Microsoft.Network/routeTables",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[parameters('routeTableName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "properties": {
-                "disableBgpRoutePropagation": true,
-                "routes": []
+                "disableBgpRoutePropagation": true
               }
             },
             {
               "type": "Microsoft.Network/virtualNetworks",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[parameters('vnetName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -424,7 +425,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "15260648950960582406"
+              "templateHash": "11714148920114780827"
             }
           },
           "parameters": {
@@ -471,10 +472,14 @@
               }
             }
           },
+          "variables": {
+            "resourceManagerHost": "[replace(replace(environment().resourceManager, 'https://', ''), '/', '')]",
+            "aadLoginHost": "[replace(replace(environment().authentication.loginEndpoint, 'https://', ''), '/', '')]"
+          },
           "resources": [
             {
               "type": "Microsoft.Network/publicIPAddresses",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[parameters('publicIpName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -488,7 +493,7 @@
             },
             {
               "type": "Microsoft.Network/firewallPolicies",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[parameters('firewallPolicyName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -501,7 +506,7 @@
             },
             {
               "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[format('{0}/{1}', parameters('firewallPolicyName'), 'aks-egress')]",
               "properties": {
                 "priority": 200,
@@ -530,8 +535,8 @@
                           "[format('*.hcp.{0}.azmk8s.io', parameters('location'))]",
                           "mcr.microsoft.com",
                           "*.data.mcr.microsoft.com",
-                          "management.azure.com",
-                          "login.microsoftonline.com",
+                          "[variables('resourceManagerHost')]",
+                          "[variables('aadLoginHost')]",
                           "packages.microsoft.com",
                           "acs-mirror.azureedge.net"
                         ]
@@ -609,7 +614,7 @@
             },
             {
               "type": "Microsoft.Network/azureFirewalls",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[parameters('firewallName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -669,7 +674,7 @@
           "outputs": {
             "firewallPrivateIp": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName')), '2023-11-01').ipConfigurations[0].properties.privateIPAddress]"
+              "value": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName')), '2024-10-01').ipConfigurations[0].properties.privateIPAddress]"
             },
             "firewallId": {
               "type": "string",
@@ -707,7 +712,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "14529833693242224053"
+              "templateHash": "3257469358478143914"
             }
           },
           "parameters": {
@@ -727,7 +732,7 @@
           "resources": [
             {
               "type": "Microsoft.Network/routeTables/routes",
-              "apiVersion": "2023-11-01",
+              "apiVersion": "2024-10-01",
               "name": "[format('{0}/{1}', parameters('routeTableName'), 'default-to-firewall')]",
               "properties": {
                 "addressPrefix": "0.0.0.0/0",
@@ -782,7 +787,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "11277780187793676701"
+              "templateHash": "12015675736007320884"
             }
           },
           "parameters": {
@@ -823,7 +828,7 @@
           "resources": [
             {
               "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-              "apiVersion": "2023-01-31",
+              "apiVersion": "2024-11-30",
               "name": "[parameters('identityName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]"
@@ -835,7 +840,7 @@
               "name": "[guid(parameters('routeTableId'), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), 'network-contributor')]",
               "properties": {
                 "roleDefinitionId": "[variables('networkContributorRoleId')]",
-                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2023-01-31').principalId]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2024-11-30').principalId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
@@ -849,7 +854,7 @@
               "name": "[guid(parameters('vnetId'), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), 'network-contributor')]",
               "properties": {
                 "roleDefinitionId": "[variables('networkContributorRoleId')]",
-                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2023-01-31').principalId]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2024-11-30').principalId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
@@ -864,11 +869,11 @@
             },
             "identityPrincipalId": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2023-01-31').principalId]"
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2024-11-30').principalId]"
             },
             "identityClientId": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2023-01-31').clientId]"
+              "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2024-11-30').clientId]"
             }
           }
         }
@@ -934,7 +939,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "13487721775897947286"
+              "templateHash": "14255553094281022199"
             }
           },
           "parameters": {
@@ -1020,7 +1025,7 @@
           "resources": [
             {
               "type": "Microsoft.ContainerService/managedClusters",
-              "apiVersion": "2024-09-02-preview",
+              "apiVersion": "2025-05-01",
               "name": "[parameters('clusterName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -1135,7 +1140,7 @@
                     "vnetSubnetID": "[parameters('gpuSubnetId')]",
                     "maxPods": 30,
                     "gpuProfile": {
-                      "installGPUDriver": false
+                      "driver": "None"
                     },
                     "nodeLabels": {
                       "amd.com/gpu": "true",
@@ -1164,15 +1169,15 @@
             },
             "nodeResourceGroup": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName')), '2024-09-02-preview').nodeResourceGroup]"
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName')), '2025-05-01').nodeResourceGroup]"
             },
             "oidcIssuerUrl": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName')), '2024-09-02-preview').oidcIssuerProfile.issuerURL]"
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName')), '2025-05-01').oidcIssuerProfile.issuerURL]"
             },
             "kubeletIdentityObjectId": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName')), '2024-09-02-preview').identityProfile.kubeletidentity.objectId]"
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('clusterName')), '2025-05-01').identityProfile.kubeletidentity.objectId]"
             }
           }
         }
@@ -1216,7 +1221,7 @@
     },
     "azureMonitorQueryEndpoint": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Monitor/accounts', variables('names').azureMonitorWorkspace), '2023-04-03').metrics.prometheusQueryEndpoint]"
+      "value": "[reference(resourceId('Microsoft.Monitor/accounts', variables('names').azureMonitorWorkspace), '2025-10-03').metrics.prometheusQueryEndpoint]"
     },
     "aksIdentityClientId": {
       "type": "string",

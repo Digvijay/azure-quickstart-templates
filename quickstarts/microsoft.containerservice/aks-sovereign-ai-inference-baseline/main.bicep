@@ -34,10 +34,12 @@ param kubernetesVersion string = '1.30.4'
 
 @description('Baseline number of MI300X GPU nodes. KEDA scales pods; cluster-autoscaler scales nodes between min and max.')
 @minValue(0)
+@maxValue(8)
 param gpuNodeCountMin int = 0
 
 @description('Maximum MI300X GPU nodes the cluster-autoscaler may provision.')
 @minValue(1)
+@maxValue(8)
 param gpuNodeCountMax int = 4
 
 @description('VM SKU for the AMD Instinct MI300X GPU user node pool (8x MI300X 192GB).')
@@ -75,13 +77,13 @@ var names = {
 
 // ------------------------------ Observability --------------------------------
 
-resource azureMonitorWorkspace 'Microsoft.Monitor/accounts@2023-04-03' = {
+resource azureMonitorWorkspace 'Microsoft.Monitor/accounts@2025-10-03' = {
   name: names.azureMonitorWorkspace
   location: location
   tags: tags
 }
 
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: names.logAnalytics
   location: location
   tags: tags
