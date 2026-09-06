@@ -1,0 +1,15 @@
+---
+# Binds KEDA's Prometheus scaler to the Azure Monitor workspace query endpoint
+# using Entra Workload Identity (no secrets on cluster). The referenced
+# user-assigned identity must hold "Monitoring Data Reader" on the Azure Monitor
+# workspace and have a federated credential for the keda-operator service
+# account. ${KEDA_IDENTITY_CLIENT_ID} is injected by scripts/deploy.sh.
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: keda-trigger-auth-prometheus
+  namespace: inference
+spec:
+  podIdentity:
+    provider: azure-workload
+    identityId: ${KEDA_IDENTITY_CLIENT_ID}

@@ -1,0 +1,44 @@
+# Helm values for the AMD GPU Operator (rocm/gpu-operator-charts).
+#
+#   helm repo add rocm https://rocm.github.io/gpu-operator-charts
+#   helm upgrade --install amd-gpu-operator rocm/gpu-operator-charts \
+#     --namespace kube-amd-gpu --create-namespace \
+#     --values amd-gpu-operator-values.yaml
+#
+# The AKS MI300X node pool is created with gpuProfile.installGPUDriver = false,
+# so the operator (not AKS) owns the ROCm kernel driver + device-plugin lifecycle.
+# In a fully air-gapped cluster, mirror these images into your private ACR and
+# override the registry/repository values below accordingly.
+
+# Only target the MI300X pool; never schedule operator DaemonSets onto system nodes.
+nodeSelector:
+  accelerator: mi300x
+
+# Tolerate the GPU pool taint so the operator components can land on MI300X nodes.
+tolerations:
+  - key: sku
+    operator: Equal
+    value: gpu
+    effect: NoSchedule
+
+# Let the operator manage (install/upgrade) the ROCm driver on the nodes.
+driver:
+  enable: true
+  # Pin the ROCm driver version for reproducible, sovereign builds.
+  version: "6.2.2"
+
+# Kubernetes device plugin that advertises the amd.com/gpu extended resource.
+devicePlugin:
+  enable: true
+  # Expose per-GPU health so KEDA/HPA and node problem detector can react.
+  enableNodeLabeller: true
+
+# Metrics exporter (ROCm SMI) for GPU utilisation dashboards and cost telemetry.
+metricsExporter:
+  enable: true
+  serviceType: ClusterIP
+  port: 5000
+
+# Node Feature Discovery is required by the operator to detect AMD hardware.
+node-feature-discovery:
+  enabled: true

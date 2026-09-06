@@ -1,0 +1,45 @@
+---
+# In-VNet API consumer used by scripts/test_inference.sh as the allowed client
+# for the inference service. Carries the role=inference-consumer label matched
+# by the allow-internal NetworkPolicy. Hardened to satisfy PodSecurity
+# "restricted". In an air-gapped cluster, mirror this image into your private ACR.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-consumer
+  namespace: inference
+  labels:
+    role: inference-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: inference-consumer
+  template:
+    metadata:
+      labels:
+        role: inference-consumer
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: client
+          image: mcr.microsoft.com/cbl-mariner/busybox:2.0
+          command: ["/bin/sh", "-c", "sleep infinity"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL

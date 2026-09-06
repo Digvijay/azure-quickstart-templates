@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "namePrefix",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Resource name prefix",
+        "defaultValue": "slmair",
+        "toolTip": "Short lowercase prefix (3-12 chars) used to name all resources.",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z0-9]{3,12}$",
+          "validationMessage": "3-12 lowercase alphanumeric characters."
+        }
+      },
+      {
+        "name": "environment",
+        "type": "Microsoft.Common.DropDown",
+        "label": "Environment",
+        "defaultValue": "prod",
+        "toolTip": "Environment moniker used in naming and tags.",
+        "constraints": {
+          "allowedValues": [
+            { "label": "Production", "value": "prod" },
+            { "label": "Staging", "value": "stage" },
+            { "label": "Development", "value": "dev" }
+          ],
+          "required": true
+        }
+      }
+    ],
+    "steps": [
+      {
+        "name": "cluster",
+        "label": "AKS + MI300X",
+        "elements": [
+          {
+            "name": "kubernetesVersion",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Kubernetes version",
+            "defaultValue": "1.30.4",
+            "toolTip": "AKS control-plane version.",
+            "constraints": {
+              "required": true,
+              "regex": "^1\\.(29|30|31)\\.[0-9]+$",
+              "validationMessage": "Enter a supported 1.29-1.31 version."
+            }
+          },
+          {
+            "name": "gpuNodeCountMin",
+            "type": "Microsoft.Common.Slider",
+            "label": "MI300X minimum nodes",
+            "defaultValue": 0,
+            "min": 0,
+            "max": 8,
+            "toolTip": "Minimum MI300X nodes. 0 enables scale-to-zero when idle."
+          },
+          {
+            "name": "gpuNodeCountMax",
+            "type": "Microsoft.Common.Slider",
+            "label": "MI300X maximum nodes",
+            "defaultValue": 4,
+            "min": 1,
+            "max": 16,
+            "toolTip": "Maximum MI300X nodes the cluster-autoscaler may provision."
+          }
+        ]
+      },
+      {
+        "name": "identity",
+        "label": "Access control",
+        "elements": [
+          {
+            "name": "clusterAdminGroupObjectId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Cluster-admin Entra group object ID",
+            "toolTip": "Object ID (GUID) of the Entra ID group granted cluster-admin via Azure RBAC.",
+            "constraints": {
+              "required": true,
+              "regex": "^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+              "validationMessage": "Enter a valid GUID."
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[location()]",
+      "namePrefix": "[basics('namePrefix')]",
+      "environment": "[basics('environment')]",
+      "kubernetesVersion": "[steps('cluster').kubernetesVersion]",
+      "gpuNodeCountMin": "[steps('cluster').gpuNodeCountMin]",
+      "gpuNodeCountMax": "[steps('cluster').gpuNodeCountMax]",
+      "clusterAdminGroupObjectId": "[steps('identity').clusterAdminGroupObjectId]"
+    }
+  }
+}

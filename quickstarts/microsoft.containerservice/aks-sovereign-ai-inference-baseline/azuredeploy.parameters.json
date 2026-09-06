@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "swedencentral"
+    },
+    "namePrefix": {
+      "value": "slmair"
+    },
+    "environment": {
+      "value": "prod"
+    },
+    "kubernetesVersion": {
+      "value": "1.30.4"
+    },
+    "gpuNodeCountMin": {
+      "value": 0
+    },
+    "gpuNodeCountMax": {
+      "value": 4
+    },
+    "gpuVmSize": {
+      "value": "Standard_ND96isr_MI300X_v5"
+    },
+    "systemVmSize": {
+      "value": "Standard_D16ds_v5"
+    },
+    "clusterAdminGroupObjectId": {
+      "value": "00000000-0000-0000-0000-000000000000"
+    }
+  }
+}

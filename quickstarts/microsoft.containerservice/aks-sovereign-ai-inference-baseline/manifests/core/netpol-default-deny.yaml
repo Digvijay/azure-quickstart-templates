@@ -1,0 +1,14 @@
+---
+# Zero-trust baseline: deny ALL ingress and ALL egress in the inference namespace.
+# Nothing communicates until an explicit allow policy grants a narrow exception.
+# This is the control that prevents model-weight / prompt-data exfiltration.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: inference
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

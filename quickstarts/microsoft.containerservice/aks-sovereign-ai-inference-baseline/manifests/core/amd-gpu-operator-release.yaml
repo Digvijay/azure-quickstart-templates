@@ -1,0 +1,34 @@
+---
+# DeviceConfig custom resource consumed by the AMD GPU Operator after the Helm
+# release is installed. It declares how the ROCm driver and device plugin are
+# configured on the MI300X node pool. Applying this drives the operator to
+# install the ROCm kernel driver (since AKS delegated driver management to None)
+# and to advertise the amd.com/gpu schedulable resource with node labels.
+apiVersion: amd.com/v1alpha1
+kind: DeviceConfig
+metadata:
+  name: mi300x-deviceconfig
+  namespace: kube-amd-gpu
+spec:
+  # Restrict the operator to the labelled MI300X pool.
+  selector:
+    accelerator: mi300x
+
+  driver:
+    # Install/manage the out-of-tree ROCm driver on the nodes.
+    enable: true
+    version: "6.2.2"
+
+  devicePlugin:
+    devicePluginImage: rocm/k8s-device-plugin:latest
+    enableNodeLabeller: true
+
+  metricsExporter:
+    enable: true
+    port: 5000
+
+  # Upgrade policy keeps at most one node draining at a time to protect capacity.
+  driverUpgradePolicy:
+    enable: true
+    maxUnavailableNodes: 1
+    rebootRequired: true

@@ -1,0 +1,45 @@
+---
+# Event-driven autoscaling on inference queue depth. KEDA reads the vLLM
+# gauge vllm:num_requests_waiting from Azure Monitor managed Prometheus and
+# scales the KAITO-managed deployment between 0 and 8 replicas: it bursts when
+# requests queue up and scales back to zero when idle so no GPU is billed while
+# unused. ${AZURE_MONITOR_QUERY_ENDPOINT} is injected by scripts/deploy.sh.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: phi-4-inference
+  namespace: inference
+  labels:
+    app: phi-4
+spec:
+  scaleTargetRef:
+    name: workspace-phi-4
+  minReplicaCount: 0
+  maxReplicaCount: 8
+  pollingInterval: 15
+  cooldownPeriod: 300
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Pods
+              value: 2
+              periodSeconds: 60
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 120
+  triggers:
+    - type: prometheus
+      metricType: AverageValue
+      metadata:
+        serverAddress: ${AZURE_MONITOR_QUERY_ENDPOINT}
+        query: sum(vllm:num_requests_waiting{namespace="inference"})
+        threshold: "5"
+        activationThreshold: "1"
+      authenticationRef:
+        name: keda-trigger-auth-prometheus

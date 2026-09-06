@@ -1,0 +1,57 @@
+---
+# Allow in-VNet API consumers (and the Azure Monitor metrics scraper) to reach
+# the vLLM inference port 8000. Ingress is restricted to labelled consumer pods
+# plus the managed-Prometheus namespace; everything else stays denied.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-inference
+  namespace: inference
+spec:
+  podSelector:
+    matchLabels:
+      kaito.sh/workspace: workspace-phi-4
+  policyTypes:
+    - Ingress
+  ingress:
+    # Internal API consumer pods within the private VNet.
+    - from:
+        - podSelector:
+            matchLabels:
+              role: inference-consumer
+      ports:
+        - protocol: TCP
+          port: 8000
+    # Azure Monitor managed Prometheus scraper (ama-metrics) for queue-depth metrics.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              rsName: ama-metrics
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# Consumer pods may only egress to the inference service on 8000 (plus DNS,
+# granted separately). They have no path to the public internet.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-consumer-egress-to-inference
+  namespace: inference
+spec:
+  podSelector:
+    matchLabels:
+      role: inference-consumer
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              kaito.sh/workspace: workspace-phi-4
+      ports:
+        - protocol: TCP
+          port: 8000

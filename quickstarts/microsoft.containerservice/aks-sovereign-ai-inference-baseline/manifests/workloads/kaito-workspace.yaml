@@ -1,0 +1,44 @@
+---
+# KAITO Workspace: declaratively provisions and serves the phi-4 SLM on the
+# MI300X pool using the ROCm-optimised vLLM runtime. KAITO renders the
+# Deployment + Service (both named "workspace-phi-4") and mounts the model,
+# targeting nodes labelled accelerator=mi300x (our MI300X user pool). The vLLM
+# server listens on :8000 and exports Prometheus metrics including the
+# queue-depth gauge vllm:num_requests_waiting used by KEDA.
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: workspace-phi-4
+  namespace: inference
+  labels:
+    app: phi-4
+  annotations:
+    # Force the ROCm/AMD vLLM runtime rather than the CUDA image.
+    kaito.sh/runtime: "vllm"
+resource:
+  instanceType: "Standard_ND96isr_MI300X_v5"
+  count: 1
+  labelSelector:
+    matchLabels:
+      accelerator: mi300x
+inference:
+  preset:
+    name: "phi-4"
+---
+# Azure Monitor managed Prometheus scrape target for the vLLM metrics endpoint.
+# Uses the azmonitoring.coreos.com CRD shipped by the AKS managed-Prometheus addon.
+apiVersion: azmonitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vllm-phi-4
+  namespace: inference
+  labels:
+    app: phi-4
+spec:
+  selector:
+    matchLabels:
+      kaito.sh/workspace: workspace-phi-4
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
